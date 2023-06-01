@@ -1,0 +1,4 @@
+slack-sdk>=3.12,<4
+toml
+random_word
+setuptools
