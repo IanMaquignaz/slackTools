@@ -67,7 +67,7 @@ class SlackTools:
         # Notify of initialization
         self.notify_init_del = verbose or notify_init_del
         if self.notify_init_del:
-            message = f"{self.__class__.__name__} was initialized" \
+            message = f"{self.__class__.__name__} was initialized " \
                     f"{'as '+self.hostname if self.hostname else ''} {self.notify}"
             if self.__class__.__name__ != SlackTools.__name__:
                 self.send_markdown(message)

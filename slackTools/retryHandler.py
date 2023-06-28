@@ -1,3 +1,5 @@
+# Standard Library
+import socket
 from typing import Optional
 
 # Slack
@@ -29,6 +31,15 @@ class MyRetryHandler(RetryHandler):
         error: Optional[Exception],
     ) -> bool:
         self.call_count += 1
-        return response is not None \
-            and response.status_code == 200 \
-                and response.body.get("error") != "fatal_error"
+        if response is not None and \
+            ( response.status_code != 200 or \
+             response.body.get("error") == "fatal_error"):
+            return True
+        
+        if error is not None \
+            and isinstance(error, socket.error) \
+                and error.errno == 104:
+            # [Errno 104] Connection reset by peer
+            return True
+
+        return False

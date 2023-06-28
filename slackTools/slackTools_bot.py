@@ -1,5 +1,7 @@
 # Slack
 from slack_sdk.web import WebClient
+from slack_sdk.http_retry.jitter import RandomJitter
+from slack_sdk.http_retry.builtin_interval_calculators import BackoffRetryIntervalCalculator
 
 # Custom
 from .slackTools import SlackTools
@@ -61,7 +63,18 @@ class SlackTools_bot(SlackTools):
             slack_default_channel_id, slack_default_channel_name)
 
         # Initialize the client
-        self.client = WebClient(self.slack_token, retry_handlers=[MyRetryHandler()])
+        self.client = WebClient(
+            self.slack_token,
+            retry_handlers=[
+                MyRetryHandler(
+                    max_retry_count=3,
+                    interval_calculator=BackoffRetryIntervalCalculator(
+                        backoff_factor=2,
+                        jitter=RandomJitter(),
+                    ),
+                )
+            ]
+        )
         if self.verbose:
             result = self.client.auth_test()
             print(
@@ -193,7 +206,6 @@ class SlackTools_bot(SlackTools):
                     blocks=blocks,
                     attachments=attachments,
                 )
-                assert response.status_code == 200
         except Exception as error:
             print(f"<?> Error sending message to slack: {error}")
             return -1
