@@ -4,21 +4,31 @@ import socket
 from random_word import RandomWords
 
 # Custom
-from . import keys
+try:
+    from . import keys
+except:
+    import keys
 
 class SlackTools:
     ''' Slack Class Encompasses config for interacting with slack and
     encapsulates basic routines
     '''
-    notify_init_del = True
 
-    def __init__(
+    _instance_SlackTools = None
+    def __new__(cls, *args, **kwargs):
+        if cls._instance_SlackTools is None:
+            cls._instance_SlackTools = super(SlackTools, cls).__new__(cls)
+            cls._instance_SlackTools.configure(*args, **kwargs)
+        return cls._instance_SlackTools
+
+
+    def configure(
             self,
-            filepath_slack_keys:str=None,
-            slack_token:str=None,
-            slack_default_channel_id:str=None,
-            slack_default_channel_name:str=None,
-            hostname:str=None,
+            filepath_slack_keys:str=str(),
+            slack_token:str=str(),
+            slack_default_channel_id:str=str(),
+            slack_default_channel_name:str=str(),
+            hostname:str=str(),
             notify_init_del:bool=True,
             verbose:bool=False
         ):
@@ -35,6 +45,7 @@ class SlackTools:
         notify_init_del:bool = whether to notify on initialization and destruction,
         verbose:bool = be verbose
         '''
+        
         self.verbose = verbose
 
         # Load keys
@@ -49,7 +60,7 @@ class SlackTools:
         elif hostname == 'rnd':
             self.hostname = RandomWords().get_random_word()
         else:
-            self.hostname = None
+            self.hostname = str()
 
         # Initialize slack config
         self.init_slack(
@@ -178,7 +189,7 @@ class SlackTools:
                 + "Please use SlackTools_bot or SlackTools_webhook.")
 
 
-    def check_channel(self, channel_id:str=None, channel_name:str=None)->str:
+    def check_channel(self, channel_id:str=str(), channel_name:str=str())->str:
         ''' Converts a the slack channel name to a slack channel ID using keys config '''
 
         if channel_name:

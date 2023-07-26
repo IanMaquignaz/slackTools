@@ -3,8 +3,12 @@ from slack_sdk.webhook import WebhookClient
 
 
 # Custom
-from .slackTools import SlackTools
-from .retryHandler import MyRetryHandler
+try:
+    from .slackTools import SlackTools
+    from .retryHandler import MyRetryHandler
+except:
+    from slackTools import SlackTools
+    from retryHandler import MyRetryHandler
 
 
 ## WEBHOOK  ##
@@ -17,13 +21,8 @@ class SlackTools_webhook(SlackTools):
     when sending messages.  
     '''
 
-    def __init__(self,
-            filepath_slack_keys:str=None,
-            slack_token:str=None,
-            hostname:str=None,
-            notify_init_del:bool=True,
-            verbose:bool=False
-        ):
+    _instance_SlackTools_webhook = None
+    def __new__(cls, *args, **kwargs):
         ''' Initializes SlackTools_webhook
         var slack_token:str = slack API token,
         var hostname:str = optional identifier for the SlackTools instance, 
@@ -33,18 +32,13 @@ class SlackTools_webhook(SlackTools):
         notify_init_del:bool = whether to notify on initialization and destruction,
         verbose:bool = be verbose
         '''
-        super(SlackTools_webhook, self).__init__(
-            filepath_slack_keys=filepath_slack_keys,
-            slack_token=slack_token,
-            hostname=hostname,
-            notify_init_del=notify_init_del,
-            verbose=verbose
-        )
-
+        if cls._instance_SlackTools_webhook is None:
+            cls._instance_SlackTools_webhook = super(SlackTools_webhook, cls).__new__(cls)
+        return cls._instance_SlackTools
 
     def init_slack(
             self,
-            slack_token:str=None,
+            slack_token:str=str(),
             *args
         ):
         ''' Initializes SlackTools config for interacting with slack'''
@@ -56,7 +50,7 @@ class SlackTools_webhook(SlackTools):
             self.slack_token = self.config['SLACK_WEBHOOK']['TOKEN']
 
 
-    def check_webhook_token(self, token:str=None):
+    def check_webhook_token(self, token:str=str()):
         '''Checks webhook token'''
         if token and token in self.config['SLACK_WEBHOOK'].keys():
             return self.config['SLACK_WEBHOOK'][token]
@@ -68,8 +62,8 @@ class SlackTools_webhook(SlackTools):
     def send_message(
             self,
             message:str="Hello World Message!!",
-            webhook_token:str=None,
-            clickbait:str=None,
+            webhook_token:str=str(),
+            clickbait:str=str(),
             ):
         '''Sends a (text only) message
         message:str = message to send,
@@ -103,9 +97,9 @@ class SlackTools_webhook(SlackTools):
     def send_markdown(
         self,
         message:str="~Hello~ \n> *Markdown* _world_`!!`",
-        header:str=None,
-        clickbait:str=None,
-        webhook_token:str=None
+        header:str=str(),
+        clickbait:str=str(),
+        webhook_token:str=str()
     ):
         '''Sends a message with markdown formatting
         header:str = message title,
@@ -157,7 +151,7 @@ class SlackTools_webhook(SlackTools):
             blocks:list=[],
             attachments:list=[],
             text:str='',
-            webhook_token:str=None
+            webhook_token:str=str()
         ):
         ''' Send Block Kit primitives to Slack via a webhook 
         See https://api.slack.com/reference/block-kit/blocks#image

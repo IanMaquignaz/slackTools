@@ -4,24 +4,22 @@ from slack_sdk.http_retry.jitter import RandomJitter
 from slack_sdk.http_retry.builtin_interval_calculators import BackoffRetryIntervalCalculator
 
 # Custom
-from .slackTools import SlackTools
-from .retryHandler import MyRetryHandler
+try:
+    from .slackTools import SlackTools
+    from .retryHandler import MyRetryHandler
+except:
+    from slackTools import SlackTools
+    from retryHandler import MyRetryHandler
 
 
 ## BOT_TOKEN ##
+
 class SlackTools_bot(SlackTools):
     '''Uses SLACK_BOT_TOKEN 
     Offers more universal access (can post to different channels)'''
-
-    def __init__(self,
-            filepath_slack_keys:str=None,
-            slack_token:str=None,
-            slack_default_channel_id:str=None,
-            slack_default_channel_name:str=None,
-            hostname:str=None,
-            notify_init_del:bool=True,
-            verbose:bool=False
-        ):
+    
+    _instance_SlackTools_bot = None
+    def __new__(cls, *args, **kwargs):
         ''' Initializes SlackTools_webhook
         var slack_token:str = slack API token,
         var slack_default_channel_id:str = ID of the slack channel to use as the default channel,
@@ -34,21 +32,16 @@ class SlackTools_bot(SlackTools):
         notify_init_del:bool = whether to notify on initialization and destruction,
         verbose:bool = be verbose
         '''
-        super(SlackTools_bot, self).__init__(
-            filepath_slack_keys=filepath_slack_keys,
-            slack_token=slack_token,
-            slack_default_channel_id=slack_default_channel_id,
-            slack_default_channel_name=slack_default_channel_name,
-            hostname=hostname,
-            notify_init_del=notify_init_del,
-            verbose=verbose
-        )
+        if cls._instance_SlackTools_bot is None:
+            cls._instance_SlackTools_bot = super(SlackTools_bot, cls).__new__(cls,*args, **kwargs)
+        return cls._instance_SlackTools_bot
+
 
     def init_slack(
             self,
-            slack_token:str=None,
-            slack_default_channel_id:str=None,
-            slack_default_channel_name:str=None
+            slack_token:str=str(),
+            slack_default_channel_id:str=str(),
+            slack_default_channel_name:str=str()
         ):
         ''' Initializes SlackTools config for interacting with slack'''
 
@@ -87,9 +80,9 @@ class SlackTools_bot(SlackTools):
     def send_message(
             self,
             message:str="Hello World Message!!",
-            channel_name:str=None,
-            channel_id:str=None,
-            clickbait:str=None,
+            channel_name:str=str(),
+            channel_id:str=str(),
+            clickbait:str=str(),
             ):
         '''Sends a (text only) message
         message:str = message to send,
@@ -124,10 +117,10 @@ class SlackTools_bot(SlackTools):
     def send_markdown(
         self,
         message="~Hello~ \n> *Markdown* _world_`!!`",
-        header=None,
-        channel_name=None,
-        channel_id=None,
-        clickbait=None,
+        header=str(),
+        channel_name=str(),
+        channel_id=str(),
+        clickbait=str(),
     ):
         '''Sends a message with markdown formatting
         header:str = message title,
@@ -180,8 +173,8 @@ class SlackTools_bot(SlackTools):
             blocks:list=[],
             attachments:list=[],
             text:str='',
-            channel_name:str=None,
-            channel_id:str=None
+            channel_name:str=str(),
+            channel_id:str=str()
         ):
         ''' Send Block Kit primitives to Slack via a webhook 
         See https://api.slack.com/reference/block-kit/blocks#image
@@ -215,10 +208,10 @@ class SlackTools_bot(SlackTools):
     def send_file(
             self,
             filepath:str="avatar.png",
-            title:str=None,
-            message:str=None,
-            channel_name:str=None,
-            channel_id:str=None
+            title:str=str(),
+            message:str=str(),
+            channel_name:str=str(),
+            channel_id:str=str()
         ):
         '''
         Uploads a file to Slack.
@@ -236,8 +229,8 @@ class SlackTools_bot(SlackTools):
                 title = filepath.split('/')[-1]
 
             # Upload the file
-            response = self.client.files_upload(
-                channels=channel_id,
+            response = self.client.files_upload_v2(
+                channel=channel_id,
                 file=filepath,
                 title=title,
                 initial_comment=message
